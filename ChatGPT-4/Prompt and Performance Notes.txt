@@ -1,7 +1,21 @@
+ChatGPT - ReactFlaskPostgre
+Task 1 - Functional (4/5 - Failed to use TypeScript)
+Task 2 - Functional (4/5 - Failed to implement images. Created Routes manually)
+Task 3 - Functional (4/5 - Failed to truncate product description.)
+Task 4 - ?
+Task 5 -
+
+
+
+Extra Prompts
+================================
+During Task 4, an extra prompt was added to request the model to modify the previous ProductDetail page so that it can add products into the cart and redirect the user to the cart page.
+
+Please update the previous ProductDetail page to include adding said product into their cart and redirect to the cart page.
+
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { productApi } from "../api/axios";
-import { cartApi } from "../api/axios";
 
 interface Product {
     id: string;
@@ -14,11 +28,8 @@ interface Product {
 
 export default function ProductDetail() {
     const { id } = useParams();
-    const navigate = useNavigate();
     const [product, setProduct] = useState<Product | null>(null);
     const [error, setError] = useState("");
-    const [quantity, setQuantity] = useState(1);
-    const customer = localStorage.getItem("email") || "";
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -31,20 +42,6 @@ export default function ProductDetail() {
         };
         fetchProduct();
     }, [id]);
-
-    const handleAddToCart = async () => {
-        if (!product || !customer) return;
-        try {
-            await cartApi.post("", {
-                product_id: product.id,
-                customer,
-                quantity,
-            });
-            navigate("/cart");
-        } catch (err: any) {
-            setError(err.response?.data?.error || "Failed to add to cart");
-        }
-    };
 
     if (error) return <p className="text-red-600 p-6">{error}</p>;
     if (!product) return <p className="p-6">Loading...</p>;
@@ -67,29 +64,10 @@ export default function ProductDetail() {
                 ${product.price}
             </p>
             <p className="text-sm text-gray-600 mb-6">Stock: {product.stock}</p>
-
-            <div className="flex items-center gap-4 mb-4">
-                <input
-                    type="number"
-                    min={1}
-                    max={product.stock}
-                    value={quantity}
-                    onChange={(e) =>
-                        setQuantity(
-                            Math.min(
-                                Math.max(1, +e.target.value),
-                                product.stock
-                            )
-                        )
-                    }
-                    className="border p-2 w-24"
-                />
-                <button
-                    onClick={handleAddToCart}
-                    className="bg-blue-600 text-white px-6 py-2 rounded">
-                    Add to Cart
-                </button>
-            </div>
+            <button className="bg-blue-600 text-white px-6 py-2 rounded">
+                Buy Now
+            </button>
         </div>
     );
 }
+================================
