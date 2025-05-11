@@ -1,143 +1,98 @@
 // src/pages/SellerDashboard.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-
-interface Product {
-    id: number;
-    name: string;
-    price: number;
-    inventory: number;
-    status: "active" | "inactive";
-}
+import ProductForm from "../components/ProductForm";
+import {
+    getProducts,
+    createProduct,
+    updateProduct,
+    toggleProductStatus,
+} from "../services/productService";
+import type { Product, ProductFormData } from "../types/product";
 
 const SellerDashboard: React.FC = () => {
     const { state, logout } = useAuth();
-
-    // Mock seller's products
-    const [products, setProducts] = useState<Product[]>([
-        {
-            id: 1,
-            name: "Premium Headphones",
-            price: 129.99,
-            inventory: 45,
-            status: "active",
-        },
-        {
-            id: 2,
-            name: "Smartphone Case",
-            price: 24.99,
-            inventory: 122,
-            status: "active",
-        },
-        {
-            id: 3,
-            name: "USB-C Cable",
-            price: 12.99,
-            inventory: 78,
-            status: "active",
-        },
-        {
-            id: 4,
-            name: "Wireless Charger",
-            price: 29.99,
-            inventory: 14,
-            status: "inactive",
-        },
-        {
-            id: 5,
-            name: "Bluetooth Speaker",
-            price: 69.99,
-            inventory: 32,
-            status: "active",
-        },
-    ]);
-
-    // Mock orders data
-    const orders = [
-        {
-            id: "#ORD-001",
-            date: "2023-05-10",
-            customer: "john@example.com",
-            total: 129.99,
-            status: "Delivered",
-        },
-        {
-            id: "#ORD-002",
-            date: "2023-05-09",
-            customer: "sarah@example.com",
-            total: 37.98,
-            status: "Shipped",
-        },
-        {
-            id: "#ORD-003",
-            date: "2023-05-08",
-            customer: "mike@example.com",
-            total: 42.97,
-            status: "Processing",
-        },
-    ];
-
-    // State for product form
+    const [products, setProducts] = useState<Product[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [newProduct, setNewProduct] = useState({
-        name: "",
-        price: 0,
-        inventory: 0,
-        status: "active" as const,
-    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [currentProduct, setCurrentProduct] = useState<Product | undefined>(
+        undefined
+    );
 
-    // Handle form input changes
-    const handleInputChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-    ) => {
-        const { name, value } = e.target;
-        setNewProduct((prev) => ({
-            ...prev,
-            [name]:
-                name === "price" || name === "inventory"
-                    ? parseFloat(value)
-                    : value,
-        }));
+    // Fetch products on component mount
+    useEffect(() => {
+        fetchProducts();
+    }, []);
+
+    // Fetch products from API
+    const fetchProducts = async () => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            const data = await getProducts();
+            setProducts(data);
+        } catch (err) {
+            setError(
+                err instanceof Error ? err.message : "Failed to load products"
+            );
+            console.error("Error fetching products:", err);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    // Handle product form submission
-    const handleAddProduct = (e: React.FormEvent) => {
-        e.preventDefault();
+    // Open form to add new product
+    const handleAddProductClick = () => {
+        setCurrentProduct(undefined);
+        setIsFormOpen(true);
+    };
 
-        // Add new product to the list
-        const newProductWithId = {
-            ...newProduct,
-            id: Math.max(...products.map((p) => p.id)) + 1,
-        };
+    // Open form to edit existing product
+    const handleEditProduct = (product: Product) => {
+        setCurrentProduct(product);
+        setIsFormOpen(true);
+    };
 
-        setProducts([...products, newProductWithId]);
-
-        // Reset form
-        setNewProduct({
-            name: "",
-            price: 0,
-            inventory: 0,
-            status: "active",
-        });
-
-        setIsFormOpen(false);
+    // Handle product form submission (create or update)
+    const handleSubmitProductForm = async (formData: ProductFormData) => {
+        try {
+            setIsSubmitting(true);
+            if (currentProduct) {
+                // Update existing product
+                await updateProduct(currentProduct.ProductId, formData);
+            } else {
+                // Create new product
+                await createProduct(formData);
+            }
+            // Refresh product list
+            await fetchProducts();
+            setIsFormOpen(false);
+        } catch (err) {
+            setError(
+                err instanceof Error ? err.message : "Failed to save product"
+            );
+            console.error("Error saving product:", err);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     // Toggle product status (active/inactive)
-    const toggleProductStatus = (productId: number) => {
-        setProducts(
-            products.map((product) =>
-                product.id === productId
-                    ? {
-                          ...product,
-                          status:
-                              product.status === "active"
-                                  ? "inactive"
-                                  : "active",
-                      }
-                    : product
-            )
-        );
+    const handleToggleProductStatus = async (productId: string) => {
+        try {
+            await toggleProductStatus(productId);
+            // Refresh product list
+            await fetchProducts();
+        } catch (err) {
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "Failed to update product status"
+            );
+            console.error("Error toggling product status:", err);
+        }
     };
 
     return (
@@ -195,6 +150,54 @@ const SellerDashboard: React.FC = () => {
                 </header>
                 <main>
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+                        {/* Error message */}
+                        {error && (
+                            <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+                                <div className="flex">
+                                    <div className="flex-shrink-0">
+                                        <svg
+                                            className="h-5 w-5 text-red-400"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor">
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <div className="ml-3">
+                                        <p className="text-sm text-red-700">
+                                            {error}
+                                        </p>
+                                    </div>
+                                    <div className="ml-auto pl-3">
+                                        <div className="-mx-1.5 -my-1.5">
+                                            <button
+                                                onClick={() => setError(null)}
+                                                className="inline-flex rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                                <span className="sr-only">
+                                                    Dismiss
+                                                </span>
+                                                <svg
+                                                    className="h-5 w-5"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 20 20"
+                                                    fill="currentColor">
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Products Section */}
                         <div
                             id="products"
@@ -209,350 +212,184 @@ const SellerDashboard: React.FC = () => {
                                     </p>
                                 </div>
                                 <button
-                                    onClick={() => setIsFormOpen(true)}
+                                    onClick={handleAddProductClick}
                                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
                                     Add Product
                                 </button>
                             </div>
 
-                            {/* Product Form */}
-                            {isFormOpen && (
-                                <div className="px-4 py-5 bg-gray-50 sm:px-6">
-                                    <form onSubmit={handleAddProduct}>
-                                        <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                                            <div className="sm:col-span-3">
-                                                <label
-                                                    htmlFor="name"
-                                                    className="block text-sm font-medium text-gray-700">
-                                                    Product Name
-                                                </label>
-                                                <div className="mt-1">
-                                                    <input
-                                                        type="text"
-                                                        name="name"
-                                                        id="name"
-                                                        required
-                                                        value={newProduct.name}
-                                                        onChange={
-                                                            handleInputChange
-                                                        }
-                                                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="sm:col-span-1">
-                                                <label
-                                                    htmlFor="price"
-                                                    className="block text-sm font-medium text-gray-700">
-                                                    Price ($)
-                                                </label>
-                                                <div className="mt-1">
-                                                    <input
-                                                        type="number"
-                                                        name="price"
-                                                        id="price"
-                                                        required
-                                                        min="0.01"
-                                                        step="0.01"
-                                                        value={newProduct.price}
-                                                        onChange={
-                                                            handleInputChange
-                                                        }
-                                                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="sm:col-span-1">
-                                                <label
-                                                    htmlFor="inventory"
-                                                    className="block text-sm font-medium text-gray-700">
-                                                    Inventory
-                                                </label>
-                                                <div className="mt-1">
-                                                    <input
-                                                        type="number"
-                                                        name="inventory"
-                                                        id="inventory"
-                                                        required
-                                                        min="0"
-                                                        value={
-                                                            newProduct.inventory
-                                                        }
-                                                        onChange={
-                                                            handleInputChange
-                                                        }
-                                                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="sm:col-span-1">
-                                                <label
-                                                    htmlFor="status"
-                                                    className="block text-sm font-medium text-gray-700">
-                                                    Status
-                                                </label>
-                                                <div className="mt-1">
-                                                    <select
-                                                        id="status"
-                                                        name="status"
-                                                        value={
-                                                            newProduct.status
-                                                        }
-                                                        onChange={
-                                                            handleInputChange
-                                                        }
-                                                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                                        <option value="active">
-                                                            Active
-                                                        </option>
-                                                        <option value="inactive">
-                                                            Inactive
-                                                        </option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-5 flex justify-end">
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setIsFormOpen(false)
-                                                }
-                                                className="mr-3 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                                                Cancel
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
-                                                Save Product
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            )}
+                            {/* Product Form Modal */}
+                            <ProductForm
+                                product={currentProduct}
+                                isOpen={isFormOpen}
+                                onClose={() => setIsFormOpen(false)}
+                                onSubmit={handleSubmitProductForm}
+                                isSubmitting={isSubmitting}
+                            />
 
                             {/* Products Table */}
                             <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th
-                                                scope="col"
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                ID
-                                            </th>
-                                            <th
-                                                scope="col"
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Name
-                                            </th>
-                                            <th
-                                                scope="col"
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Price
-                                            </th>
-                                            <th
-                                                scope="col"
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Inventory
-                                            </th>
-                                            <th
-                                                scope="col"
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Status
-                                            </th>
-                                            <th
-                                                scope="col"
-                                                className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Actions
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {products.map((product) => (
-                                            <tr key={product.id}>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    #{product.id}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    {product.name}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    ${product.price.toFixed(2)}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {product.inventory}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span
-                                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                            product.status ===
-                                                            "active"
-                                                                ? "bg-green-100 text-green-800"
-                                                                : "bg-red-100 text-red-800"
-                                                        }`}>
-                                                        {product.status ===
-                                                        "active"
-                                                            ? "Active"
-                                                            : "Inactive"}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <button
-                                                        onClick={() =>
-                                                            toggleProductStatus(
-                                                                product.id
-                                                            )
-                                                        }
-                                                        className="text-indigo-600 hover:text-indigo-900 mr-4">
-                                                        {product.status ===
-                                                        "active"
-                                                            ? "Deactivate"
-                                                            : "Activate"}
-                                                    </button>
-                                                    <button className="text-gray-600 hover:text-gray-900">
-                                                        Edit
-                                                    </button>
-                                                </td>
+                                {isLoading ? (
+                                    <div className="text-center py-10">
+                                        <svg
+                                            className="animate-spin h-10 w-10 text-indigo-600 mx-auto"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24">
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"></circle>
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <p className="mt-2 text-gray-500">
+                                            Loading products...
+                                        </p>
+                                    </div>
+                                ) : products.length === 0 ? (
+                                    <div className="text-center py-10">
+                                        <svg
+                                            className="mx-auto h-12 w-12 text-gray-400"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                                            />
+                                        </svg>
+                                        <h3 className="mt-2 text-sm font-medium text-gray-900">
+                                            No products
+                                        </h3>
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Get started by creating a new
+                                            product.
+                                        </p>
+                                        <div className="mt-6">
+                                            <button
+                                                onClick={handleAddProductClick}
+                                                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                <svg
+                                                    className="-ml-1 mr-2 h-5 w-5"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 20 20"
+                                                    fill="currentColor">
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                                New Product
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th
+                                                    scope="col"
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    ID
+                                                </th>
+                                                <th
+                                                    scope="col"
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Name
+                                                </th>
+                                                <th
+                                                    scope="col"
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Price
+                                                </th>
+                                                <th
+                                                    scope="col"
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Inventory
+                                                </th>
+                                                <th
+                                                    scope="col"
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Status
+                                                </th>
+                                                <th
+                                                    scope="col"
+                                                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Actions
+                                                </th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Orders Section */}
-                        <div
-                            id="orders"
-                            className="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
-                            <div className="px-4 py-5 sm:px-6">
-                                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                                    Recent Orders
-                                </h3>
-                                <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                                    Track and manage customer orders
-                                </p>
-                            </div>
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th
-                                                scope="col"
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Order ID
-                                            </th>
-                                            <th
-                                                scope="col"
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Date
-                                            </th>
-                                            <th
-                                                scope="col"
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Customer
-                                            </th>
-                                            <th
-                                                scope="col"
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Total
-                                            </th>
-                                            <th
-                                                scope="col"
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Status
-                                            </th>
-                                            <th
-                                                scope="col"
-                                                className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Actions
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {orders.map((order) => (
-                                            <tr key={order.id}>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    {order.id}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {order.date}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {order.customer}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    ${order.total.toFixed(2)}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span
-                                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                            order.status ===
-                                                            "Delivered"
-                                                                ? "bg-green-100 text-green-800"
-                                                                : order.status ===
-                                                                  "Shipped"
-                                                                ? "bg-blue-100 text-blue-800"
-                                                                : "bg-yellow-100 text-yellow-800"
-                                                        }`}>
-                                                        {order.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <button className="text-indigo-600 hover:text-indigo-900">
-                                                        View Details
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Account Section */}
-                        <div
-                            id="account"
-                            className="bg-white shadow overflow-hidden sm:rounded-lg">
-                            <div className="px-4 py-5 sm:px-6">
-                                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                                    Account Information
-                                </h3>
-                                <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                                    Personal details and account settings
-                                </p>
-                            </div>
-                            <div className="border-t border-gray-200">
-                                <dl>
-                                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                        <dt className="text-sm font-medium text-gray-500">
-                                            Email address
-                                        </dt>
-                                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                            {state.user?.email}
-                                        </dd>
-                                    </div>
-                                    <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                        <dt className="text-sm font-medium text-gray-500">
-                                            Account type
-                                        </dt>
-                                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                            {state.user?.role}
-                                        </dd>
-                                    </div>
-                                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                        <dt className="text-sm font-medium text-gray-500">
-                                            Account created
-                                        </dt>
-                                        <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                            May 10, 2023
-                                        </dd>
-                                    </div>
-                                </dl>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {products.map((product) => (
+                                                <tr key={product.ProductId}>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        #
+                                                        {product.ProductId.substring(
+                                                            0,
+                                                            8
+                                                        )}
+                                                        ...
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                        {product.ProductName}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        $
+                                                        {product.ProductPrice.toFixed(
+                                                            2
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {product.ProductStock}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span
+                                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                                product.IsActive
+                                                                    ? "bg-green-100 text-green-800"
+                                                                    : "bg-red-100 text-red-800"
+                                                            }`}>
+                                                            {product.IsActive
+                                                                ? "Active"
+                                                                : "Inactive"}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                        <button
+                                                            onClick={() =>
+                                                                handleToggleProductStatus(
+                                                                    product.ProductId
+                                                                )
+                                                            }
+                                                            className="text-indigo-600 hover:text-indigo-900 mr-4">
+                                                            {product.IsActive
+                                                                ? "Deactivate"
+                                                                : "Activate"}
+                                                        </button>
+                                                        <button
+                                                            onClick={() =>
+                                                                handleEditProduct(
+                                                                    product
+                                                                )
+                                                            }
+                                                            className="text-gray-600 hover:text-gray-900">
+                                                            Edit
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
                             </div>
                         </div>
                     </div>

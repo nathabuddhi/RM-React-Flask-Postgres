@@ -24,7 +24,9 @@ def create_app(config_class=Config):
     
     # Import and register blueprints
     from app.routes.auth import auth_bp
-    
+    from app.routes.product import product_bp
+
+    app.register_blueprint(product_bp)
     app.register_blueprint(auth_bp)
     
     # Create database tables if they don't exist
