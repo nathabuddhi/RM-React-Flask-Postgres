@@ -1,5 +1,7 @@
 from app import db
 import uuid
+from datetime import datetime
+from app import db
 
 class MsUser(db.Model):
     __tablename__ = 'MsUser'
@@ -24,3 +26,12 @@ class Cart(db.Model):
     product_id = db.Column(db.String(36), db.ForeignKey("MsProduct.product_id"), primary_key=True)
     customer = db.Column(db.String(255), db.ForeignKey("MsUser.email"), primary_key=True)
     quantity = db.Column(db.Integer, nullable=False, default=1)
+
+class Order(db.Model):
+    __tablename__ = 'Orders'
+    order_id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    product_id = db.Column(db.String(36), db.ForeignKey("MsProduct.product_id"), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    customer = db.Column(db.String(255), db.ForeignKey("MsUser.email"), nullable=False)
+    status = db.Column(db.String(15), default="Pending", nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)

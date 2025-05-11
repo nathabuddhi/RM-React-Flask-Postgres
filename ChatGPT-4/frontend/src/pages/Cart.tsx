@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { cartApi } from "../api/axios";
+import CheckoutForm from "./CheckoutForm";
 
 interface CartItem {
     product_id: string;
@@ -52,11 +53,6 @@ export default function Cart() {
         } catch {
             setMessage("Failed to remove item");
         }
-    };
-
-    const handleCheckout = () => {
-        // Checkout logic will be implemented in the next task
-        alert("Checkout placeholder");
     };
 
     const total = cart.reduce(
@@ -125,11 +121,10 @@ export default function Cart() {
                         <p className="text-lg font-bold">
                             Total: ${total.toFixed(2)}
                         </p>
-                        <button
-                            onClick={handleCheckout}
-                            className="mt-2 bg-blue-600 text-white px-4 py-2 rounded">
-                            Checkout
-                        </button>
+                        <CheckoutForm
+                            customer={customerEmail}
+                            onSuccess={fetchCart}
+                        />
                     </div>
                 </>
             )}

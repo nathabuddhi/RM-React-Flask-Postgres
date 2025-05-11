@@ -20,7 +20,9 @@ def create_app():
     from app.routes.auth_routes import auth_bp
     from app.routes.product_routes import product_bp
     from app.routes.cart_routes import cart_bp
-
+    from app.routes.checkout_routes import checkout_bp
+    
+    app.register_blueprint(checkout_bp)
     app.register_blueprint(cart_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(product_bp)

@@ -2,8 +2,8 @@ ChatGPT - ReactFlaskPostgre
 Task 1 - Functional (4/5 - Failed to use TypeScript)
 Task 2 - Functional (4/5 - Failed to implement images. Created Routes manually)
 Task 3 - Functional (4/5 - Failed to truncate product description.)
-Task 4 - ?
-Task 5 -
+Task 4 - Functional (5/5)
+Task 5 - Functional (5/5)
 
 
 
