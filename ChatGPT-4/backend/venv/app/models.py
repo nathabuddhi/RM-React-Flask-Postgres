@@ -18,3 +18,9 @@ class MsProduct(db.Model):
     product_price = db.Column(db.Numeric(10, 2), nullable=False)
     product_stock = db.Column(db.Integer, nullable=False)
     product_owner = db.Column(db.String(100), db.ForeignKey("MsUser.email"), nullable=False)
+
+class Cart(db.Model):
+    __tablename__ = 'Cart'
+    product_id = db.Column(db.String(36), db.ForeignKey("MsProduct.product_id"), primary_key=True)
+    customer = db.Column(db.String(255), db.ForeignKey("MsUser.email"), primary_key=True)
+    quantity = db.Column(db.Integer, nullable=False, default=1)

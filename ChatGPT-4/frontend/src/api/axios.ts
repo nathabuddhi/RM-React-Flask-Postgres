@@ -7,3 +7,7 @@ export const authApi = axios.create({
 export const productApi = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL + "/products",
 });
+
+export const cartApi = axios.create({
+    baseURL: import.meta.env.VITE_API_BASE_URL + "/cart",
+});

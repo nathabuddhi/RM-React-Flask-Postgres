@@ -9,6 +9,7 @@ import Register from "./pages/Register";
 import ProductManagement from "./pages/ProductManagement";
 import ProductSearch from "./pages/ProductSearch";
 import ProductDetail from "./pages/ProductDetail";
+import Cart from "./pages/Cart";
 
 const getUser = () => {
     const email = localStorage.getItem("email");
@@ -40,6 +41,16 @@ function App() {
                     element={
                         user?.role === "Customer" ? (
                             <ProductDetail />
+                        ) : (
+                            <Navigate to="/login" replace />
+                        )
+                    }
+                />
+                <Route
+                    path="/cart"
+                    element={
+                        user?.role === "Customer" ? (
+                            <Cart />
                         ) : (
                             <Navigate to="/login" replace />
                         )
