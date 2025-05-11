@@ -7,6 +7,8 @@ import {
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProductManagement from "./pages/ProductManagement";
+import ProductSearch from "./pages/ProductSearch";
+import ProductDetail from "./pages/ProductDetail";
 
 const getUser = () => {
     const email = localStorage.getItem("email");
@@ -20,30 +22,24 @@ function App() {
     return (
         <Router>
             <Routes>
-                {/* Public routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
 
-                {/* Protected routes */}
                 <Route
-                    path="/customer-dashboard"
+                    path="/products"
                     element={
                         user?.role === "Customer" ? (
-                            <div className="p-4 text-xl font-bold">
-                                Welcome Customer
-                            </div>
+                            <ProductSearch />
                         ) : (
                             <Navigate to="/login" replace />
                         )
                     }
                 />
                 <Route
-                    path="/seller-dashboard"
+                    path="/product/:id"
                     element={
-                        user?.role === "Seller" ? (
-                            <div className="p-4 text-xl font-bold">
-                                Welcome Seller
-                            </div>
+                        user?.role === "Customer" ? (
+                            <ProductDetail />
                         ) : (
                             <Navigate to="/login" replace />
                         )
@@ -60,7 +56,6 @@ function App() {
                     }
                 />
 
-                {/* Default fallback */}
                 <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
         </Router>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../api/axios";
 
@@ -8,6 +8,14 @@ export default function Login() {
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const loggedInEmail = localStorage.getItem("email");
+        const role = localStorage.getItem("role");
+        if (loggedInEmail && role) {
+            navigate(role === "Customer" ? "/products" : "/product-management");
+        }
+    }, []);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -16,11 +24,7 @@ export default function Login() {
             localStorage.setItem("email", res.data.email);
             localStorage.setItem("role", res.data.role);
 
-            navigate(
-                role === "Customer"
-                    ? "/customer-dashboard"
-                    : "/seller-dashboard"
-            );
+            navigate(role === "Customer" ? "/products" : "/product-management");
         } catch (err: any) {
             setError(err.response?.data?.error || "Login failed");
         }
