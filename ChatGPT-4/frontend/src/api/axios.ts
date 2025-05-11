@@ -15,3 +15,7 @@ export const cartApi = axios.create({
 export const checkoutApi = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL + "/checkout",
 });
+
+export const orderApi = axios.create({
+    baseURL: import.meta.env.VITE_API_BASE_URL + "/orders",
+});

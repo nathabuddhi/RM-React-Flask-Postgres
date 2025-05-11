@@ -10,6 +10,7 @@ import ProductManagement from "./pages/ProductManagement";
 import ProductSearch from "./pages/ProductSearch";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
+import OrdersPage from "./pages/Orders";
 
 const getUser = () => {
     const email = localStorage.getItem("email");
@@ -26,6 +27,12 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
 
+                <Route
+                    path="/orders"
+                    element={
+                        user ? <OrdersPage /> : <Navigate to="/login" replace />
+                    }
+                />
                 <Route
                     path="/products"
                     element={

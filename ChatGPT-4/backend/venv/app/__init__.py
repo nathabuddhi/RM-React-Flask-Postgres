@@ -21,7 +21,9 @@ def create_app():
     from app.routes.product_routes import product_bp
     from app.routes.cart_routes import cart_bp
     from app.routes.checkout_routes import checkout_bp
+    from app.routes.order_routes import order_bp
     
+    app.register_blueprint(order_bp)
     app.register_blueprint(checkout_bp)
     app.register_blueprint(cart_bp)
     app.register_blueprint(auth_bp)
