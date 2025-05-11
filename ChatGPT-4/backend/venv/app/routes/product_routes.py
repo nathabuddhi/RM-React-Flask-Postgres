@@ -4,6 +4,41 @@ from sqlalchemy.exc import SQLAlchemyError
 
 product_bp = Blueprint("product", __name__, url_prefix="/products")
 
+@product_bp.route("/search", methods=["GET"])
+def search_products():
+    query = request.args.get("q", "").strip().lower()
+    products = MsProduct.query.filter(
+        MsProduct.product_stock > 0,
+        MsProduct.product_name.ilike(f"%{query}%")
+    ).all()
+
+    if not products:
+        return jsonify({"error": "No products found"}), 404
+
+    return jsonify([{
+        "id": p.product_id,
+        "name": p.product_name,
+        "description": p.product_description,
+        "images": p.product_images.split(",") if p.product_images else [],
+        "price": str(p.product_price),
+        "stock": p.product_stock
+    } for p in products]), 200
+
+@product_bp.route("/detail/<product_id>", methods=["GET"])
+def get_product_detail(product_id):
+    product = MsProduct.query.get(product_id)
+    if not product:
+        return jsonify({"error": "Product not found"}), 404
+
+    return jsonify({
+        "id": product.product_id,
+        "name": product.product_name,
+        "description": product.product_description,
+        "images": product.product_images.split(",") if product.product_images else [],
+        "price": str(product.product_price),
+        "stock": product.product_stock
+    }), 200
+
 
 @product_bp.route("/<email>", methods=["GET"])
 def get_products(email):
