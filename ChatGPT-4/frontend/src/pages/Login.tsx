@@ -13,6 +13,9 @@ export default function Login() {
         try {
             const res = await authApi.post("/login", { email, password });
             const role = res.data.role;
+            localStorage.setItem("email", res.data.email);
+            localStorage.setItem("role", res.data.role);
+
             navigate(
                 role === "Customer"
                     ? "/customer-dashboard"
