@@ -1,35 +1,87 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.tsx
+import {
+    BrowserRouter as Router,
+    Routes,
+    Route,
+    Navigate,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
-function App() {
-  const [count, setCount] = useState(0)
+// Pages
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import CustomerDashboard from "./pages/CustomerDashboard";
+import SellerDashboard from "./pages/SellerDashboard";
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+// Protected Route Component
+const ProtectedRoute: React.FC<{
+    element: React.ReactNode;
+    requiredRole?: "Customer" | "Seller";
+}> = ({ element, requiredRole }) => {
+    const { state } = useAuth();
 
-export default App
+    if (state.loading) {
+        return <div>Loading...</div>;
+    }
+
+    if (!state.isAuthenticated) {
+        return <Navigate to="/login" />;
+    }
+
+    if (requiredRole && state.user?.role !== requiredRole) {
+        return (
+            <Navigate
+                to={
+                    state.user?.role === "Customer"
+                        ? "/customer/dashboard"
+                        : "/seller/dashboard"
+                }
+            />
+        );
+    }
+
+    return <>{element}</>;
+};
+
+// Main App Component
+const AppRoutes: React.FC = () => {
+    return (
+        <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route
+                path="/customer/dashboard"
+                element={
+                    <ProtectedRoute
+                        element={<CustomerDashboard />}
+                        requiredRole="Customer"
+                    />
+                }
+            />
+            <Route
+                path="/seller/dashboard"
+                element={
+                    <ProtectedRoute
+                        element={<SellerDashboard />}
+                        requiredRole="Seller"
+                    />
+                }
+            />
+            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+    );
+};
+
+const App: React.FC = () => {
+    return (
+        <Router>
+            <AuthProvider>
+                <AppRoutes />
+            </AuthProvider>
+        </Router>
+    );
+};
+
+export default App;
+
