@@ -6,6 +6,7 @@ import CustomerDashboard from "./pages/CustomerDashboard";
 import SellerDashboard from "./pages/SellerDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProductDetail from "./pages/ProductDetail";
+import CartPage from "./pages/CartPage";
 
 function App() {
     return (
@@ -26,6 +27,14 @@ function App() {
                     element={
                         <ProtectedRoute allowedRoles={["Customer"]}>
                             <ProductDetail />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/cart"
+                    element={
+                        <ProtectedRoute allowedRoles={["Customer"]}>
+                            <CartPage />
                         </ProtectedRoute>
                     }
                 />

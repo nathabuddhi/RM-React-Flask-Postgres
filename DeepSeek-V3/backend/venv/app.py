@@ -22,6 +22,9 @@ def create_app():
     # Register blueprints
     from api.auth import auth_bp
     from api.product import product_bp
+    from api.cart import cart_bp
+    
+    app.register_blueprint(cart_bp)
     app.register_blueprint(product_bp)
     app.register_blueprint(auth_bp)
     

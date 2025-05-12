@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import type { Product } from "../types/product";
 import apiClient from "../api/client";
+import { addToCart } from "../services/cartApi";
 
 export default function ProductDetail() {
     const { productId } = useParams();
@@ -15,9 +16,7 @@ export default function ProductDetail() {
         const fetchProduct = async () => {
             try {
                 setIsLoading(true);
-                const response = await apiClient.get(
-                    `/product/${productId}`
-                );
+                const response = await apiClient.get(`/product/${productId}`);
                 setProduct(response.data);
             } catch (err) {
                 setError("Failed to fetch product details");
@@ -30,11 +29,15 @@ export default function ProductDetail() {
         fetchProduct();
     }, [productId]);
 
-    const handleAddToCart = () => {
-        // Implement cart functionality here
-        console.log(`Added ${quantity} of ${product?.product_name} to cart`);
-        // Temporary success message
-        alert("Product added to cart!");
+    const handleAddToCart = async () => {
+        try {
+            await addToCart(product?.product_id || "", quantity);
+            alert("Product added to cart successfully!");
+        } catch (error) {
+            alert(
+                error instanceof Error ? error.message : "Failed to add to cart"
+            );
+        }
     };
 
     if (isLoading) {
