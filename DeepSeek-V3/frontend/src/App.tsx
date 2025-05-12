@@ -2,9 +2,10 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-// import CustomerDashboard from "./pages/CustomerDashboard";
+import CustomerDashboard from "./pages/CustomerDashboard";
 import SellerDashboard from "./pages/SellerDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ProductDetail from "./pages/ProductDetail";
 
 function App() {
     return (
@@ -12,14 +13,22 @@ function App() {
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                {/* <Route
+                <Route
                     path="/customer-dashboard"
                     element={
                         <ProtectedRoute allowedRoles={["Customer"]}>
                             <CustomerDashboard />
                         </ProtectedRoute>
                     }
-                /> */}
+                />
+                <Route
+                    path="/product/:productId"
+                    element={
+                        <ProtectedRoute allowedRoles={["Customer"]}>
+                            <ProductDetail />
+                        </ProtectedRoute>
+                    }
+                />
                 <Route
                     path="/seller-dashboard"
                     element={

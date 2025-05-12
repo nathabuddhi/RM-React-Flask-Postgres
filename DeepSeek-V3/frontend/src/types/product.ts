@@ -8,6 +8,11 @@ export interface Product {
     product_owner: string;
 }
 
+export interface ProductSearchResponse {
+    products: Product[];
+    message?: string;
+}
+
 export interface ProductFormData {
     product_name: string;
     product_description: string;

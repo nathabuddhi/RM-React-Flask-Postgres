@@ -12,6 +12,22 @@ def get_products():
     products = MsProduct.query.filter_by(product_owner=current_user['email']).all()
     return jsonify([product.to_dict() for product in products])
 
+@product_bp.route('/product/<product_id>', methods=['GET'])
+def get_product(product_id):
+    try:
+        product = MsProduct.query.filter_by(product_id=product_id).first()
+        
+        if not product:
+            return jsonify({'error': 'Product not found'}), 404
+            
+        return jsonify(product.to_dict())
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to fetch product',
+            'details': str(e)
+        }), 500
+
 @product_bp.route('/product', methods=['POST'])
 @jwt_required()
 def create_product():
@@ -80,3 +96,38 @@ def delete_product(product_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
+    
+@product_bp.route('/product/search', methods=['GET'])
+def search_products():
+    search_query = request.args.get('q', '').strip()
+    min_stock = request.args.get('min_stock', 1, type=int)
+    
+    try:
+        # Base query for available products
+        query = MsProduct.query.filter(
+            MsProduct.product_stock >= min_stock
+        )
+        
+        # Add search filter if query exists
+        if search_query:
+            query = query.filter(
+                MsProduct.product_name.ilike(f'%{search_query}%')
+            )
+        
+        products = query.all()
+        
+        if not products:
+            return jsonify({
+                'message': 'No products found matching your search',
+                'products': []
+            }), 200
+        
+        return jsonify({
+            'products': [product.to_dict() for product in products]
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to search products',
+            'details': str(e)
+        }), 500
