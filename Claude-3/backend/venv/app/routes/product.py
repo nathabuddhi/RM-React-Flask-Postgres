@@ -1,13 +1,14 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models.product import MsProduct
-# from app.routes.auth import token_required
 import uuid
 import os
 from werkzeug.utils import secure_filename
+from flask_cors import CORS
 
 # Create a blueprint for product routes
 product_bp = Blueprint('product', __name__)
+CORS(product_bp)  # Enable CORS for all routes in this blueprint
 
 # Helper function to validate product data
 def validate_product_data(data):
@@ -36,14 +37,10 @@ def validate_product_data(data):
             
     return errors
 
-# Get all products for the current seller
+# Get all products
 @product_bp.route('/api/products', methods=['GET'])
-# @token_required
-def get_products(current_user):
-    if current_user.Role != 'seller':
-        return jsonify({'message': 'Unauthorized access'}), 403
-        
-    products = MsProduct.query.filter_by(ProductOwner=current_user.Email).all()
+def get_products():
+    products = MsProduct.query.filter_by(IsActive=True).all()
     return jsonify({
         'products': [product.to_dict() for product in products],
         'message': 'Products retrieved successfully'
@@ -51,13 +48,9 @@ def get_products(current_user):
 
 # Get a specific product
 @product_bp.route('/api/products/<product_id>', methods=['GET'])
-# @token_required
-def get_product(current_user, product_id):
-    if current_user.Role != 'seller':
-        return jsonify({'message': 'Unauthorized access'}), 403
-        
+def get_product(product_id):
     try:
-        product = MsProduct.query.filter_by(ProductId=uuid.UUID(product_id), ProductOwner=current_user.Email).first()
+        product = MsProduct.query.filter_by(ProductId=uuid.UUID(product_id), IsActive=True).first()
         if not product:
             return jsonify({'message': 'Product not found'}), 404
             
@@ -70,11 +63,7 @@ def get_product(current_user, product_id):
 
 # Create a new product
 @product_bp.route('/api/products', methods=['POST'])
-# @token_required
-def create_product(current_user):
-    if current_user.Role != 'seller':
-        return jsonify({'message': 'Unauthorized access'}), 403
-        
+def create_product():
     data = request.form.to_dict()
     
     # Validate product data
@@ -104,7 +93,7 @@ def create_product(current_user):
             ProductImages=product_image,
             ProductPrice=float(data['ProductPrice']),
             ProductStock=int(data['ProductStock']),
-            ProductOwner=current_user.Email,
+            ProductOwner=data.get('ProductOwner', 'anonymous@example.com'),  # Default value if not provided
             IsActive=True
         )
         
@@ -122,13 +111,9 @@ def create_product(current_user):
 
 # Update an existing product
 @product_bp.route('/api/products/<product_id>', methods=['PUT'])
-# @token_required
-def update_product(current_user, product_id):
-    if current_user.Role != 'seller':
-        return jsonify({'message': 'Unauthorized access'}), 403
-    
+def update_product(product_id):
     try:
-        product = MsProduct.query.filter_by(ProductId=uuid.UUID(product_id), ProductOwner=current_user.Email).first()
+        product = MsProduct.query.filter_by(ProductId=uuid.UUID(product_id), IsActive=True).first()
         if not product:
             return jsonify({'message': 'Product not found'}), 404
         
@@ -180,13 +165,9 @@ def update_product(current_user, product_id):
 
 # Delete a product (soft delete)
 @product_bp.route('/api/products/<product_id>', methods=['DELETE'])
-# @token_required
-def delete_product(current_user, product_id):
-    if current_user.Role != 'seller':
-        return jsonify({'message': 'Unauthorized access'}), 403
-    
+def delete_product(product_id):
     try:
-        product = MsProduct.query.filter_by(ProductId=uuid.UUID(product_id), ProductOwner=current_user.Email).first()
+        product = MsProduct.query.filter_by(ProductId=uuid.UUID(product_id), IsActive=True).first()
         if not product:
             return jsonify({'message': 'Product not found'}), 404
         
@@ -206,13 +187,9 @@ def delete_product(current_user, product_id):
 
 # Toggle product status (active/inactive)
 @product_bp.route('/api/products/<product_id>/toggle-status', methods=['PUT'])
-# @token_required
-def toggle_product_status(current_user, product_id):
-    if current_user.Role != 'seller':
-        return jsonify({'message': 'Unauthorized access'}), 403
-    
+def toggle_product_status(product_id):
     try:
-        product = MsProduct.query.filter_by(ProductId=uuid.UUID(product_id), ProductOwner=current_user.Email).first()
+        product = MsProduct.query.filter_by(ProductId=uuid.UUID(product_id)).first()
         if not product:
             return jsonify({'message': 'Product not found'}), 404
         

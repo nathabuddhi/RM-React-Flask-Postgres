@@ -17,6 +17,7 @@ export interface ProductFormData {
     ProductPrice: number;
     ProductStock: number;
     ProductImage?: File | null;
+    ProductOwner?: string;
 }
 
 export interface ApiResponse<T> {

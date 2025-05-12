@@ -16,15 +16,20 @@ const ProductForm: React.FC<ProductFormProps> = ({
     onSubmit,
     isSubmitting,
 }) => {
+    // Get user email from localStorage
+    const userEmail = localStorage.getItem("userEmail") || "";
+
     const [formData, setFormData] = useState<ProductFormData>({
         ProductName: "",
         ProductDescription: "",
         ProductPrice: 0,
         ProductStock: 0,
         ProductImage: null,
+        ProductOwner: userEmail, // Initialize with user email from localStorage
     });
 
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
     // Set form data when editing an existing product
     useEffect(() => {
@@ -35,6 +40,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 ProductPrice: product.ProductPrice,
                 ProductStock: product.ProductStock,
                 ProductImage: null,
+                ProductOwner: product.ProductOwner || userEmail,
             });
 
             if (product.ProductImages) {
@@ -48,15 +54,27 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 ProductPrice: 0,
                 ProductStock: 0,
                 ProductImage: null,
+                ProductOwner: userEmail,
             });
             setImagePreview(null);
         }
-    }, [product, isOpen]);
+        // Reset form errors
+        setFormErrors({});
+    }, [product, isOpen, userEmail]);
 
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
         const { name, value, type } = e.target;
+
+        // Clear any error for this field when it's modified
+        if (formErrors[name]) {
+            setFormErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
 
         setFormData((prev) => ({
             ...prev,
@@ -82,9 +100,57 @@ const ProductForm: React.FC<ProductFormProps> = ({
         }
     };
 
+    const validateForm = (): boolean => {
+        const errors: { [key: string]: string } = {};
+
+        if (!formData.ProductName.trim()) {
+            errors.ProductName = "Product name is required";
+        }
+
+        if (
+            isNaN(Number(formData.ProductPrice)) ||
+            Number(formData.ProductPrice) <= 0
+        ) {
+            errors.ProductPrice = "Price must be a positive number";
+        }
+
+        if (
+            isNaN(Number(formData.ProductStock)) ||
+            Number(formData.ProductStock) < 0
+        ) {
+            errors.ProductStock = "Stock must be a non-negative integer";
+        }
+
+        if (!formData.ProductOwner?.trim()) {
+            errors.ProductOwner = "Product owner email is required";
+        } else if (!/\S+@\S+\.\S+/.test(formData.ProductOwner)) {
+            errors.ProductOwner = "Please enter a valid email address";
+        }
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await onSubmit(formData);
+
+        if (validateForm()) {
+            try {
+                await onSubmit(formData);
+            } catch (error) {
+                // If the error is related to product owner not existing in database
+                if (
+                    error instanceof Error &&
+                    error.message.includes("ProductOwner")
+                ) {
+                    setFormErrors((prev) => ({
+                        ...prev,
+                        ProductOwner:
+                            "This email is not registered in the system",
+                    }));
+                }
+            }
+        }
     };
 
     if (!isOpen) return null;
@@ -130,8 +196,48 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                 onChange={handleInputChange}
                                 maxLength={50}
                                 required
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className={`mt-1 block w-full px-3 py-2 border ${
+                                    formErrors.ProductName
+                                        ? "border-red-500"
+                                        : "border-gray-300"
+                                } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                             />
+                            {formErrors.ProductName && (
+                                <p className="mt-1 text-sm text-red-600">
+                                    {formErrors.ProductName}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Product Owner Email */}
+                        <div>
+                            <label
+                                htmlFor="ProductOwner"
+                                className="block text-sm font-medium text-gray-700">
+                                Product Owner Email *
+                            </label>
+                            <input
+                                type="email"
+                                id="ProductOwner"
+                                name="ProductOwner"
+                                value={formData.ProductOwner}
+                                onChange={handleInputChange}
+                                required
+                                className={`mt-1 block w-full px-3 py-2 border ${
+                                    formErrors.ProductOwner
+                                        ? "border-red-500"
+                                        : "border-gray-300"
+                                } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                            />
+                            {formErrors.ProductOwner && (
+                                <p className="mt-1 text-sm text-red-600">
+                                    {formErrors.ProductOwner}
+                                </p>
+                            )}
+                            <p className="mt-1 text-xs text-gray-500">
+                                Email must belong to a registered user in the
+                                system
+                            </p>
                         </div>
 
                         {/* Product Description */}
@@ -168,8 +274,17 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                     required
                                     min="0.01"
                                     step="0.01"
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className={`mt-1 block w-full px-3 py-2 border ${
+                                        formErrors.ProductPrice
+                                            ? "border-red-500"
+                                            : "border-gray-300"
+                                    } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                                 />
+                                {formErrors.ProductPrice && (
+                                    <p className="mt-1 text-sm text-red-600">
+                                        {formErrors.ProductPrice}
+                                    </p>
+                                )}
                             </div>
 
                             <div>
@@ -186,8 +301,17 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                     onChange={handleInputChange}
                                     required
                                     min="0"
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className={`mt-1 block w-full px-3 py-2 border ${
+                                        formErrors.ProductStock
+                                            ? "border-red-500"
+                                            : "border-gray-300"
+                                    } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
                                 />
+                                {formErrors.ProductStock && (
+                                    <p className="mt-1 text-sm text-red-600">
+                                        {formErrors.ProductStock}
+                                    </p>
+                                )}
                             </div>
                         </div>
 

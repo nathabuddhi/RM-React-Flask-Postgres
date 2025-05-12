@@ -1,6 +1,6 @@
 import type { Product, ProductFormData, ApiResponse } from "../types/product";
 
-const API_URL = "/api/products";
+const API_URL = "http://localhost:5000/api/products";
 
 // Helper function to handle API responses
 const handleResponse = async (response: Response) => {
@@ -14,13 +14,12 @@ const handleResponse = async (response: Response) => {
     return data;
 };
 
-// Get all products for the current seller
+// Get all products
 export const getProducts = async (): Promise<Product[]> => {
     const response = await fetch(API_URL, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
     });
 
@@ -34,7 +33,6 @@ export const getProduct = async (productId: string): Promise<Product> => {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
     });
 
@@ -59,9 +57,6 @@ export const createProduct = async (
 
     const response = await fetch(API_URL, {
         method: "POST",
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
         body: formData,
     });
 
@@ -86,9 +81,6 @@ export const updateProduct = async (
 
     const response = await fetch(`${API_URL}/${productId}`, {
         method: "PUT",
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
         body: formData,
     });
 
@@ -103,7 +95,6 @@ export const deleteProduct = async (
         method: "DELETE",
         headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
     });
 
@@ -118,7 +109,6 @@ export const toggleProductStatus = async (
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
     });
 

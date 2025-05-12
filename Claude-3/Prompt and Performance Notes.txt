@@ -1,3 +1,4 @@
 Claude - ReactFlaskPostgre
 Task 1 - Functional (5/5)
-Task 2 - Non Functional (3/5)
+Task 2 - Non Functional (4/5 - Failed to follow the set table structure) -> Manual fixes using 5 additional prompts were used.
+Task 3 - 
