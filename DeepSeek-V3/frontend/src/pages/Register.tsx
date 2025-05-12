@@ -1,122 +1,72 @@
-import React, { useState } from "react";
+// src/pages/Register.tsx
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { register } from "../services/authApi";
 
-const Register: React.FC = () => {
+export default function Register() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [role, setRole] = useState<"Customer" | "Seller">("Customer");
-    const { register, error } = useAuth();
+    const [error, setError] = useState("");
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const success = await register(email, password, role);
-        if (success) {
+        try {
+            const { token } = await register(email, password, role);
+
+            // Store auth data
+            localStorage.setItem("token", token);
+            localStorage.setItem("user", JSON.stringify({ email, role }));
+
+            // Redirect based on role
             navigate(
                 role === "Customer"
                     ? "/customer-dashboard"
                     : "/seller-dashboard"
             );
+        } catch (err) {
+            setError(
+                err instanceof Error ? err.message : "Registration failed"
+            );
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
-                <h2 className="text-3xl font-extrabold text-center text-gray-900">
-                    Create an account
-                </h2>
-                {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-                        {error}
-                    </div>
-                )}
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    <div className="rounded-md shadow-sm space-y-4">
-                        <div>
-                            <label
-                                htmlFor="email"
-                                className="block text-sm font-medium text-gray-700">
-                                Email address
-                            </label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <label
-                                htmlFor="password"
-                                className="block text-sm font-medium text-gray-700">
-                                Password
-                            </label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="new-password"
-                                required
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Role
-                            </label>
-                            <div className="mt-1 flex rounded-md shadow-sm">
-                                <button
-                                    type="button"
-                                    className={`flex-1 py-2 px-4 rounded-l-md border ${
-                                        role === "Customer"
-                                            ? "bg-indigo-600 text-white border-indigo-600"
-                                            : "bg-white text-gray-700 border-gray-300"
-                                    }`}
-                                    onClick={() => setRole("Customer")}>
-                                    Customer
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`flex-1 py-2 px-4 rounded-r-md border ${
-                                        role === "Seller"
-                                            ? "bg-indigo-600 text-white border-indigo-600"
-                                            : "bg-white text-gray-700 border-gray-300"
-                                    }`}
-                                    onClick={() => setRole("Seller")}>
-                                    Seller
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <button
-                            type="submit"
-                            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            Register
-                        </button>
-                    </div>
-                </form>
-                <div className="text-center">
-                    <p className="text-sm text-gray-600">
-                        Already have an account?{" "}
-                        <a
-                            href="/login"
-                            className="font-medium text-indigo-600 hover:text-indigo-500">
-                            Sign in
-                        </a>
-                    </p>
+        <div className="register-container">
+            <h2>Register</h2>
+            {error && <div className="error-message">{error}</div>}
+            <form onSubmit={handleSubmit}>
+                <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email"
+                    required
+                />
+                <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password"
+                    required
+                />
+                <div className="role-selector">
+                    <button
+                        type="button"
+                        className={role === "Customer" ? "active" : ""}
+                        onClick={() => setRole("Customer")}>
+                        Customer
+                    </button>
+                    <button
+                        type="button"
+                        className={role === "Seller" ? "active" : ""}
+                        onClick={() => setRole("Seller")}>
+                        Seller
+                    </button>
                 </div>
-            </div>
+                <button type="submit">Register</button>
+            </form>
         </div>
     );
-};
-
-export default Register;
+}

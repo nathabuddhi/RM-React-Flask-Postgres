@@ -1,6 +1,5 @@
-from backend import db
+from models import db
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token
 
 class MsUser(db.Model):
     __tablename__ = 'MsUser'
@@ -16,6 +15,7 @@ class MsUser(db.Model):
         return check_password_hash(self.password, password)
     
     def generate_token(self):
+        from flask_jwt_extended import create_access_token 
         return create_access_token(identity={
             'email': self.email,
             'role': self.role

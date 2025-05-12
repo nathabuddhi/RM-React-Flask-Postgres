@@ -1,27 +1,28 @@
-import React from "react";
-import { Navigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+// src/components/ProtectedRoute.tsx
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-interface ProtectedRouteProps {
-    children: React.ReactElement;
-    allowedRoles: ("Customer" | "Seller")[];
-}
-
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+export default function ProtectedRoute({
     children,
     allowedRoles,
-}) => {
-    const { user } = useAuth();
+}: {
+    children: React.ReactNode;
+    allowedRoles: ("Customer" | "Seller")[];
+}) {
+    const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-    if (!user) {
-        return <Navigate to="/login" replace />;
+    useEffect(() => {
+        if (!user?.email) {
+            navigate("/login");
+        } else if (!allowedRoles.includes(user.role)) {
+            navigate("/unauthorized");
+        }
+    }, [user, allowedRoles, navigate]);
+
+    if (!user?.email || !allowedRoles.includes(user.role)) {
+        return null; // or loading spinner
     }
 
-    if (!allowedRoles.includes(user.role)) {
-        return <Navigate to="/" replace />;
-    }
-
-    return children;
-};
-
-export default ProtectedRoute;
+    return <>{children}</>;
+}
