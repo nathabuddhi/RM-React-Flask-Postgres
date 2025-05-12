@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-    getCart,
-    updateCartItem,
-    removeFromCart,
-} from "../services/cartApi";
+import { getCart, updateCartItem, removeFromCart } from "../services/cartApi";
 import type { CartItem } from "../types/cart";
 
 export default function CartPage() {
@@ -60,6 +56,10 @@ export default function CartPage() {
     };
 
     const handleCheckout = () => {
+        if (cartItems.length === 0) {
+            setError("Your cart is empty");
+            return;
+        }
         navigate("/checkout");
     };
 
@@ -178,7 +178,12 @@ export default function CartPage() {
                         </div>
                         <button
                             onClick={handleCheckout}
-                            className="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-lg font-bold">
+                            disabled={cartItems.length === 0}
+                            className={`w-full py-3 px-6 rounded-lg font-bold ${
+                                cartItems.length > 0
+                                    ? "bg-green-500 hover:bg-green-600 text-white"
+                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            }`}>
                             Proceed to Checkout
                         </button>
                     </div>

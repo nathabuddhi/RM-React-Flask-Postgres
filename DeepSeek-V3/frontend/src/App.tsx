@@ -7,6 +7,8 @@ import SellerDashboard from "./pages/SellerDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProductDetail from "./pages/ProductDetail";
 import CartPage from "./pages/CartPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import OrderSuccess from "./pages/OrderSuccess";
 
 function App() {
     return (
@@ -35,6 +37,22 @@ function App() {
                     element={
                         <ProtectedRoute allowedRoles={["Customer"]}>
                             <CartPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/checkout"
+                    element={
+                        <ProtectedRoute allowedRoles={["Customer"]}>
+                            <CheckoutPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/order-success"
+                    element={
+                        <ProtectedRoute allowedRoles={["Customer"]}>
+                            <OrderSuccess />
                         </ProtectedRoute>
                     }
                 />
