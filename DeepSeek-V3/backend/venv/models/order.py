@@ -1,6 +1,13 @@
 from models import db
 import uuid
 from datetime import datetime
+from enum import Enum
+
+class OrderStatus(Enum):
+    PENDING = 'Pending'
+    ACCEPTED = 'Accepted'
+    SHIPPED = 'Shipped'
+    COMPLETED = 'Completed'
 
 class Order(db.Model):
     __tablename__ = 'Orders'

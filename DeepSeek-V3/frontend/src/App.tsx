@@ -9,6 +9,7 @@ import ProductDetail from "./pages/ProductDetail";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderSuccess from "./pages/OrderSuccess";
+import OrdersPage from "./pages/OrderPage";
 
 function App() {
     return (
@@ -56,6 +57,7 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
+                <Route path="/orders" element={<OrdersPage />} />
                 <Route
                     path="/seller-dashboard"
                     element={

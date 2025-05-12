@@ -1,5 +1,12 @@
 import type { Product } from "./product";
 
+export enum OrderStatus {
+    PENDING = "Pending",
+    ACCEPTED = "Accepted",
+    SHIPPED = "Shipped",
+    COMPLETED = "Completed",
+}
+
 export interface Order {
     order_id: string;
     product_id: string;
@@ -17,7 +24,7 @@ export interface CheckoutRequest {
     shipping_address: string;
 }
 
-export interface CheckoutResponse {
-    message: string;
-    orders: Order[];
+export interface OrderStatusUpdate {
+    order_id: string;
+    status: OrderStatus;
 }

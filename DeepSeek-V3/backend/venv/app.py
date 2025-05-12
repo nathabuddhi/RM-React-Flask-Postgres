@@ -24,8 +24,8 @@ def create_app():
     from api.product import product_bp
     from api.cart import cart_bp
     from api.checkout import checkout_bp
-
-
+    from api.order import order_bp
+    app.register_blueprint(order_bp)
     app.register_blueprint(checkout_bp)
     app.register_blueprint(cart_bp)
     app.register_blueprint(product_bp)
