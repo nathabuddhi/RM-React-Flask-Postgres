@@ -1,0 +1,3 @@
+DeepSeek - ReactFlaskPostgre
+Task 1 - Non Functional (5/5)
+Task 2 - Functional (4/5 - Failed to implement Images)

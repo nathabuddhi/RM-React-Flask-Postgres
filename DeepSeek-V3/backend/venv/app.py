@@ -12,7 +12,7 @@ def create_app():
         r"/*": {
             "origins": ["http://localhost:5173"],
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type"]
+            "allow_headers": ["Content-Type", "Authorization"]
         }
     })
     # Initialize extensions
@@ -21,6 +21,8 @@ def create_app():
     
     # Register blueprints
     from api.auth import auth_bp
+    from api.product import product_bp
+    app.register_blueprint(product_bp)
     app.register_blueprint(auth_bp)
     
     return app

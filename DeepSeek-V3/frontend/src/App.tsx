@@ -3,8 +3,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 // import CustomerDashboard from "./pages/CustomerDashboard";
-// import SellerDashboard from "./pages/SellerDashboard";
-// import ProtectedRoute from "./components/ProtectedRoute";
+import SellerDashboard from "./pages/SellerDashboard";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
     return (
@@ -19,7 +19,7 @@ function App() {
                             <CustomerDashboard />
                         </ProtectedRoute>
                     }
-                />
+                /> */}
                 <Route
                     path="/seller-dashboard"
                     element={
@@ -27,7 +27,7 @@ function App() {
                             <SellerDashboard />
                         </ProtectedRoute>
                     }
-                /> */}
+                />
             </Routes>
         </BrowserRouter>
     );
