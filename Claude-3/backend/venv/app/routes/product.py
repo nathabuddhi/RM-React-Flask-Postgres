@@ -207,3 +207,28 @@ def toggle_product_status(product_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'message': f'An error occurred: {str(e)}'}), 500
+    
+@product_bp.route('/api/products/search', methods=['GET'])
+def search_products():
+    search_query = request.args.get('search', '')
+    
+    # Base query - filter only active products with stock > 0
+    products_query = MsProduct.query.filter(
+        MsProduct.IsActive == True,
+        MsProduct.ProductStock > 0
+    )
+    
+    # Apply search filter if provided
+    if search_query:
+        products_query = products_query.filter(
+            MsProduct.ProductName.ilike(f'%{search_query}%')
+        )
+    
+    # Execute query and get all matching products
+    products = products_query.all()
+    
+    return jsonify({
+        'products': [product.to_dict() for product in products],
+        'message': 'Products retrieved successfully',
+        'count': len(products)
+    }), 200

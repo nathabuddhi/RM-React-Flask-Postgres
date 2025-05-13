@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import SellerDashboard from "./pages/SellerDashboard";
+import ProductDetail from "./pages/ProductDetail";
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{
@@ -59,6 +60,15 @@ const AppRoutes: React.FC = () => {
                 }
             />
             <Route
+                path="/products/:productId"
+                element={
+                    <ProtectedRoute
+                        element={<ProductDetail />}
+                        requiredRole="Customer"
+                    />
+                }
+            />
+            <Route
                 path="/seller/dashboard"
                 element={
                     <ProtectedRoute
@@ -84,4 +94,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-

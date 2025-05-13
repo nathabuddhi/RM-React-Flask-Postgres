@@ -114,3 +114,29 @@ export const toggleProductStatus = async (
 
     return handleResponse(response);
 };
+
+export interface ProductResponse {
+    products: Product[];
+    message: string;
+    count: number;
+}
+
+export const searchProducts = async (
+    searchQuery?: string
+): Promise<ProductResponse> => {
+    let url = `${API_URL}/search`;
+
+    // Add search query parameter if provided
+    if (searchQuery) {
+        url += `?search=${encodeURIComponent(searchQuery)}`;
+    }
+
+    const response = await fetch(url, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    return handleResponse(response);
+};

@@ -1,193 +1,156 @@
-// src/pages/CustomerDashboard.tsx
-import React, { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
+// src/pages/ProductSearch.tsx
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { searchProducts } from "../services/productService";
+import type { Product } from "../types/product";
 
-interface Product {
-    id: number;
-    name: string;
-    price: number;
-    description: string;
-    image: string;
-}
-
-const CustomerDashboard: React.FC = () => {
-    const { state, logout } = useAuth();
+const ProductSearch: React.FC = () => {
     const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [searchQuery, setSearchQuery] = useState<string>("");
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
 
-    // Mock products data
+    // Function to load products
+    const loadProducts = async (query: string = "") => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const response = await searchProducts(query);
+            setProducts(response.products);
+
+            if (response.products.length === 0 && query) {
+                setError(`No products found matching "${query}"`);
+            }
+        } catch (err) {
+            setError("Failed to load products. Please try again later.");
+            console.error("Error loading products:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Load products on component mount
     useEffect(() => {
-        // Simulate API call to fetch products
-        setTimeout(() => {
-            setProducts([
-                {
-                    id: 1,
-                    name: "Wireless Headphones",
-                    price: 129.99,
-                    description:
-                        "High-quality noise cancelling wireless headphones",
-                    image: "/api/placeholder/300/200",
-                },
-                {
-                    id: 2,
-                    name: "Smartphone",
-                    price: 799.99,
-                    description:
-                        "Latest model with high-resolution camera and fast processor",
-                    image: "/api/placeholder/300/200",
-                },
-                {
-                    id: 3,
-                    name: "Laptop",
-                    price: 1299.99,
-                    description: "Powerful laptop with long battery life",
-                    image: "/api/placeholder/300/200",
-                },
-                {
-                    id: 4,
-                    name: "Smartwatch",
-                    price: 249.99,
-                    description: "Track your fitness and stay connected",
-                    image: "/api/placeholder/300/200",
-                },
-            ]);
-            setLoading(false);
-        }, 1000);
+        loadProducts();
     }, []);
 
+    // Handle search form submission
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        loadProducts(searchQuery);
+    };
+
+    // Handle product click to navigate to detail page
+    const handleProductClick = (productId: string) => {
+        navigate(`/products/${productId}`);
+    };
+
+    // Function to truncate text
+    const truncateText = (
+        text: string | null,
+        maxLength: number = 120
+    ): string => {
+        if (!text) return "";
+        return text.length > maxLength
+            ? `${text.substring(0, maxLength)}...`
+            : text;
+    };
+
     return (
-        <div className="min-h-screen bg-gray-100">
-            <nav className="bg-white shadow">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16">
-                        <div className="flex">
-                            <div className="flex-shrink-0 flex items-center">
-                                <h1 className="text-xl font-bold text-indigo-600">
-                                    E-Commerce
-                                </h1>
-                            </div>
-                            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                                <a
-                                    href="#"
-                                    className="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                                    Products
-                                </a>
-                                <a
-                                    href="#"
-                                    className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                                    Orders
-                                </a>
-                                <a
-                                    href="#"
-                                    className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                                    Profile
-                                </a>
-                            </div>
-                        </div>
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <span className="mr-4 text-gray-700">
-                                    Welcome, {state.user?.email}
-                                </span>
-                                <button
-                                    onClick={logout}
-                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    Logout
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+        <div className="container mx-auto px-4 py-8">
+            <h1 className="text-3xl font-bold mb-6">Products</h1>
+
+            {/* Search Form */}
+            <form onSubmit={handleSearch} className="mb-8">
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        placeholder="Search products..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="flex-grow px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                        type="submit"
+                        className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        Search
+                    </button>
                 </div>
-            </nav>
+            </form>
 
-            <div className="py-10">
-                <header>
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <h1 className="text-3xl font-bold text-gray-900">
-                            Customer Dashboard
-                        </h1>
-                    </div>
-                </header>
-                <main>
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-                        <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6">
-                            <div className="border-b border-gray-200 pb-5">
-                                <h3 className="text-lg font-medium leading-6 text-gray-900">
-                                    Featured Products
-                                </h3>
-                                <p className="mt-2 max-w-4xl text-sm text-gray-500">
-                                    Browse our latest products and add to cart
-                                </p>
+            {/* Loading State */}
+            {isLoading && (
+                <div className="flex justify-center my-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+            )}
+
+            {/* Error State */}
+            {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                    {error}
+                </div>
+            )}
+
+            {/* Products Grid */}
+            {!isLoading && products.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {products.map((product) => (
+                        <div
+                            key={product.ProductId}
+                            onClick={() =>
+                                handleProductClick(product.ProductId)
+                            }
+                            className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+                            {/* Product Image */}
+                            <div className="h-48 bg-gray-200 flex items-center justify-center">
+                                {product.ProductImages ? (
+                                    <img
+                                        src={product.ProductImages}
+                                        alt={product.ProductName}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="text-gray-400">
+                                        No image
+                                    </div>
+                                )}
                             </div>
 
-                            {loading ? (
-                                <div className="py-10 text-center">
-                                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent"></div>
-                                    <p className="mt-4 text-gray-700">
-                                        Loading products...
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="mt-6 grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
-                                    {products.map((product) => (
-                                        <div
-                                            key={product.id}
-                                            className="group relative">
-                                            <div className="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-md overflow-hidden group-hover:opacity-75">
-                                                <img
-                                                    src={product.image}
-                                                    alt={product.name}
-                                                    className="w-full h-full object-center object-cover"
-                                                />
-                                            </div>
-                                            <div className="mt-4 flex justify-between">
-                                                <div>
-                                                    <h3 className="text-sm text-gray-700">
-                                                        <a href="#">
-                                                            <span
-                                                                aria-hidden="true"
-                                                                className="absolute inset-0"
-                                                            />
-                                                            {product.name}
-                                                        </a>
-                                                    </h3>
-                                                    <p className="mt-1 text-sm text-gray-500">
-                                                        {product.description}
-                                                    </p>
-                                                </div>
-                                                <p className="text-sm font-medium text-gray-900">
-                                                    ${product.price}
-                                                </p>
-                                            </div>
-                                            <button className="mt-3 w-full bg-indigo-600 border border-transparent rounded-md py-2 px-4 flex items-center justify-center text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                                Add to Cart
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            <div className="mt-10 border-t border-gray-200 pt-5">
-                                <h3 className="text-lg font-medium text-gray-900">
-                                    Your Account Details
+                            {/* Product Details */}
+                            <div className="p-4">
+                                <h3 className="text-lg font-semibold mb-2">
+                                    {product.ProductName}
                                 </h3>
-                                <div className="mt-4 bg-gray-50 p-4 rounded-md">
-                                    <p className="text-sm text-gray-600">
-                                        <strong>Email:</strong>{" "}
-                                        {state.user?.email}
-                                    </p>
-                                    <p className="mt-1 text-sm text-gray-600">
-                                        <strong>Role:</strong>{" "}
-                                        {state.user?.role}
-                                    </p>
+                                <p className="text-gray-600 text-sm mb-2">
+                                    {truncateText(product.ProductDescription)}
+                                </p>
+                                <div className="flex justify-between items-center mt-3">
+                                    <span className="font-bold text-lg">
+                                        ${product.ProductPrice.toFixed(2)}
+                                    </span>
+                                    <span className="text-sm text-gray-500">
+                                        Stock: {product.ProductStock}
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </main>
-            </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Empty State (when not loading and no error) */}
+            {!isLoading && !error && products.length === 0 && (
+                <div className="text-center py-10">
+                    <p className="text-gray-500 text-lg">
+                        No products available.
+                    </p>
+                </div>
+            )}
         </div>
     );
 };
 
-export default CustomerDashboard;
+export default ProductSearch;
