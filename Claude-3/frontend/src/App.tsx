@@ -14,6 +14,8 @@ import CustomerDashboard from "./pages/CustomerDashboard";
 import SellerDashboard from "./pages/SellerDashboard";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
+import OrderConfirmation from "./pages/OrderConfirmation";
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{
@@ -74,6 +76,24 @@ const AppRoutes: React.FC = () => {
                 element={
                     <ProtectedRoute
                         element={<Cart />}
+                        requiredRole="Customer"
+                    />
+                }
+            />
+            <Route
+                path="/checkout"
+                element={
+                    <ProtectedRoute
+                        element={<Checkout />}
+                        requiredRole="Customer"
+                    />
+                }
+            />
+            <Route
+                path="/order-confirmation"
+                element={
+                    <ProtectedRoute
+                        element={<OrderConfirmation />}
                         requiredRole="Customer"
                     />
                 }
