@@ -3,7 +3,7 @@ import type { Product, ProductFormData, ApiResponse } from "../types/product";
 const API_URL = "http://localhost:5000/api/products";
 
 // Helper function to handle API responses
-const handleResponse = async (response: Response) => {
+export const handleResponse = async (response: Response) => {
     const data = await response.json();
 
     if (!response.ok) {

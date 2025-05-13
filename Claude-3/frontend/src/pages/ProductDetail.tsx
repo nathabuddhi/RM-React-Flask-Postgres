@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProduct } from "../services/productService";
+import { addToCart } from "../services/cartService";
+import { toast, ToastContainer } from "react-toastify"; // Assuming you're using react-toastify for notifications
 import type { Product } from "../types/product";
 
 const ProductDetail: React.FC = () => {
@@ -11,6 +13,7 @@ const ProductDetail: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [quantity, setQuantity] = useState<number>(1);
+    const [isAddingToCart, setIsAddingToCart] = useState<boolean>(false);
 
     useEffect(() => {
         const loadProduct = async () => {
@@ -39,18 +42,25 @@ const ProductDetail: React.FC = () => {
         loadProduct();
     }, [id]);
 
-    const handleAddToCart = () => {
-        // Here you would implement the add to cart functionality
-        // This would likely involve calling an API and updating cart state
-        console.log(
-            "Adding to cart:",
-            product?.ProductId,
-            "Quantity:",
-            quantity
-        );
+    const handleAddToCart = async () => {
+        if (!product || !id) return;
 
-        // For now, we'll just show an alert
-        alert(`Added ${quantity} item(s) of ${product?.ProductName} to cart`);
+        setIsAddingToCart(true);
+
+        try {
+            const response = await addToCart(id, quantity);
+            toast.success(
+                response.message || "Product added to cart successfully"
+            );
+
+            // Optionally navigate to cart or show a confirmation dialog
+            // navigate('/cart');
+        } catch (err: any) {
+            toast.error(err.message || "Failed to add product to cart");
+            console.error("Error adding to cart:", err);
+        } finally {
+            setIsAddingToCart(false);
+        }
     };
 
     const handleQuantityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -89,11 +99,20 @@ const ProductDetail: React.FC = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <button
-                onClick={() => navigate("/customer/dashboard")}
-                className="mb-6 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
-                Back to Products
-            </button>
+            <ToastContainer />
+            <div className="flex justify-between mb-6">
+                <button
+                    onClick={() => navigate("/products")}
+                    className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+                    Back to Products
+                </button>
+
+                <button
+                    onClick={() => navigate("/cart")}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    View Cart
+                </button>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Product Image */}
@@ -161,8 +180,13 @@ const ProductDetail: React.FC = () => {
 
                             <button
                                 onClick={handleAddToCart}
-                                className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                Add to Cart
+                                disabled={isAddingToCart}
+                                className={`px-6 py-2 ${
+                                    isAddingToCart
+                                        ? "bg-gray-400"
+                                        : "bg-blue-600 hover:bg-blue-700"
+                                } text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500`}>
+                                {isAddingToCart ? "Adding..." : "Add to Cart"}
                             </button>
                         </div>
                     )}

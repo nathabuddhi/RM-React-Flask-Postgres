@@ -13,6 +13,7 @@ import Register from "./pages/Register";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import SellerDashboard from "./pages/SellerDashboard";
 import ProductDetail from "./pages/ProductDetail";
+import Cart from "./pages/Cart";
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{
@@ -64,6 +65,15 @@ const AppRoutes: React.FC = () => {
                 element={
                     <ProtectedRoute
                         element={<ProductDetail />}
+                        requiredRole="Customer"
+                    />
+                }
+            />
+            <Route
+                path="/cart"
+                element={
+                    <ProtectedRoute
+                        element={<Cart />}
                         requiredRole="Customer"
                     />
                 }
