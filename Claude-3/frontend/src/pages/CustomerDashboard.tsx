@@ -94,6 +94,12 @@ const ProductSearch: React.FC = () => {
                 </div>
             )}
 
+            <button
+                onClick={() => navigate("/customer/orders")}
+                className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                GO to orders
+            </button>
+
             {/* Products Grid */}
             {!isLoading && products.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

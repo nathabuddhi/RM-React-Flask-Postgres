@@ -4,3 +4,4 @@ Task 2 - Non Functional (4/5 - Failed to follow the set table structure) -> Manu
 Task 3 - Functional (4/5 - Failed to truncate description if too long.)
 Task 4 - Functional (5/5)
 Task 5 - Functional (5/5)
+Task 6 - Non-Functional (Failed to generate seller orders page. Failed to load orders on generated customer orders page)
